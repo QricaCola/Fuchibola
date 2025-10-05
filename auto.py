@@ -1,88 +1,59 @@
 import streamlit as st
-import pandas as pd
+import json
+import os
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
+from datetime import datetime
 
-# --- Configuración Google Sheets ---
-scope = ["https://spreadsheets.google.com/feeds","https://www.googleapis.com/auth/drive"]
-creds = ServiceAccountCredentials.from_json_keyfile_name("credenciales.json", scope)
+# ---------- CONFIG GOOGLE SHEETS ----------
+scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+
+# Leer credenciales desde variable de entorno de Streamlit Cloud
+creds_dict = json.loads(os.environ['GSPREAD_JSON'])
+creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
-# Abrir la hoja
-sheet = client.open("Inscripciones Futbol").sheet1
+# Abrir hoja de Google Sheets
+sheet_name = "Inscripciones Futbol"  # Asegúrate de que esta hoja exista en Google Sheets
+sheet = client.open(sheet_name).sheet1
 
-# --- Inicializar estado si no existe ---
-# Celda A1 = "Estado" | A2 = "Cerrada"
+# ---------- CONFIG STREAMLIT ----------
+st.title("Registro Partido de Fútbol ⚽")
+st.write("Máximo 14 jugadores por partido")
+
+# Leer jugadores actuales desde Google Sheets
 try:
-    estado = sheet.acell("A2").value
+    jugadores = sheet.col_values(1)
 except:
-    sheet.update("A1", "Estado")
-    sheet.update("A2", "Cerrada")
-    estado = "Cerrada"
+    jugadores = []
 
-# --- Leer datos existentes ---
-data = sheet.get_all_records()
-df = pd.DataFrame(data)
-
-st.title("⚽ Inscripción pichanga ⚽")
-st.write(f"Cupo máximo: 14 jugadores")
-st.write(f"Jugadores inscritos: {len(df)}")
-st.write(f"Estado de la lista: {estado}")
-
-# -------------------------
-# Panel de control de admin
-# -------------------------
-admin_password = "#Mordecay123"  # Cambia esto a tu contraseña
-
-st.sidebar.title("Panel de administrador 🔒")
-password = st.sidebar.text_input("Ingresa contraseña", type="password")
-
-if password == admin_password:
-    st.sidebar.subheader("Control de lista")
-    
+# ---------- PANEL DE ADMIN (RESET) ----------
+password = st.sidebar.text_input("Contraseña de admin (para reset)", type="password")
+if password == "#Mordecay123":  # Cambia esto a algo seguro
+    st.sidebar.warning("Admin mode activado")
     if st.sidebar.button("Resetear lista"):
         sheet.clear()
-        sheet.append_row(["Nombre"])  # encabezado
-        sheet.update("A1", "Estado")
-        sheet.update("A2", "Cerrada")
-        st.success("✅ Lista reseteada correctamente")
-        df = pd.DataFrame(columns=["Nombre"])  # vacía localmente
-        estado = "Cerrada"
-        
-    if st.sidebar.button("Abrir lista"):
-        sheet.update("A2", "Abierta")
-        st.success("✅ Lista abierta para inscripciones")
-        estado = "Abierta"
+        st.sidebar.success("Lista reseteada!")
+    st.sidebar.markdown("---")
 
-elif password != "" and password != admin_password:
-    st.sidebar.error("Contraseña incorrecta ❌")
+# ---------- REGISTRO DE JUGADORES ----------
+if len(jugadores) < 14:
+    nombre = st.text_input("Ingresa tu nombre para inscribirte")
+    if st.button("Inscribirme"):
+        if nombre.strip() == "":
+            st.warning("Ingresa un nombre válido")
+        elif nombre in jugadores:
+            st.warning("Ya estás inscrito!")
+        else:
+            # Guardar en Google Sheets
+            sheet.append_row([nombre, str(datetime.now())])
+            st.success(f"{nombre} inscrito con éxito!")
+            jugadores.append(nombre)
+else:
+    st.error("¡Se alcanzó el máximo de 14 jugadores!")
 
-# -------------------------
-# Registro de jugadores
-# -------------------------
-nombre = st.text_input("Ingresa tu nombre")
-
-if st.button("Registrarme"):
-    if estado != "Abierta":
-        st.warning("❌ Las inscripciones aún no están abiertas ❌")
-    elif len(df) >= 14:
-        st.error("⚠️ Cupo completo, la lista ya está cerrada ⚠️")
-        sheet.update("A2", "Cerrada")
-        estado = "Cerrada"
-    elif nombre.strip() == "":
-        st.warning("Ingresa un nombre válido")
-    elif nombre in df['Nombre'].values:
-        st.warning("Ya estás inscrito broder")
-    else:
-        sheet.append_row([nombre])
-        st.success(f"{nombre} inscrito correctamente ✅")
-        df = pd.concat([df, pd.DataFrame({"Nombre":[nombre]})], ignore_index=True)
-        # Cierre automático al llegar a 14 jugadores
-        if len(df) >= 14:
-            st.warning("⚠️ Se alcanzó el cupo máximo, la lista se cerrará automáticamente")
-            sheet.update("A2", "Cerrada")
-            estado = "Cerrada"
-
-# Mostrar jugadores
-st.subheader("Jugadores inscritos")
-st.table(df)
+# ---------- MOSTRAR JUGADORES ----------
+if jugadores:
+    st.subheader("Jugadores inscritos:")
+    for i, j in enumerate(jugadores, start=1):
+        st.write(f"{i}. {j}")
