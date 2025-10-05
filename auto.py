@@ -28,9 +28,8 @@ except:
     jugadores = []
 
 # ---------- PANEL DE ADMIN (RESET) ----------
-password = st.sidebar.text_input("Contraseña de admin (para reset)", type="password")
+password = st.sidebar.text_input("Admin", type="password")
 if password == "#Mordecay123":  # Cambia esto a algo seguro
-    st.sidebar.warning("Admin mode activado")
     if st.sidebar.button("Resetear lista"):
         sheet.clear()
         st.sidebar.success("Lista reseteada!")
@@ -38,7 +37,7 @@ if password == "#Mordecay123":  # Cambia esto a algo seguro
 
 # ---------- REGISTRO DE JUGADORES ----------
 if len(jugadores) < 14:
-    nombre = st.text_input("Ingresa tu nombre para inscribirte")
+    nombre = st.text_input("Ingresa tu nombre y si deseas, añade la posición en la que te gusta jugar entre paréntesis")
     if st.button("Anotarme"):
         if nombre.strip() == "":
             st.warning("Ingresa un nombre válido")
@@ -47,10 +46,10 @@ if len(jugadores) < 14:
         else:
             # Guardar en Google Sheets
             sheet.append_row([nombre, str(datetime.now())])
-            st.success(f"{nombre} inscrito con éxito!")
+            st.success(f"{nombre} anotado")
             jugadores.append(nombre)
 else:
-    st.error("¡Se alcanzó el máximo de 14 jugadores!")
+    st.error("Se alcanzó el máximo de 14 jugadores broder")
 
 # ---------- MOSTRAR JUGADORES ----------
 if jugadores:
