@@ -18,7 +18,7 @@ sheet_name = "Inscripciones Futbol"  # Asegúrate de que esta hoja exista en Goo
 sheet = client.open(sheet_name).sheet1
 
 # ---------- CONFIG STREAMLIT ----------
-st.title("Registro Partido de Fútbol ⚽")
+st.title("Pichanga Miércoles ⚽")
 st.write("Máximo 14 jugadores por partido")
 
 # Leer jugadores actuales desde Google Sheets
@@ -39,7 +39,7 @@ if password == "#Mordecay123":  # Cambia esto a algo seguro
 # ---------- REGISTRO DE JUGADORES ----------
 if len(jugadores) < 14:
     nombre = st.text_input("Ingresa tu nombre para inscribirte")
-    if st.button("Inscribirme"):
+    if st.button("Anotarme"):
         if nombre.strip() == "":
             st.warning("Ingresa un nombre válido")
         elif nombre in jugadores:
