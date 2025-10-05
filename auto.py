@@ -1,44 +1,88 @@
 import streamlit as st
-import time
+import pandas as pd
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
 
-st.set_page_config(page_title="Proyecto", page_icon="🛹")
+# --- Configuración Google Sheets ---
+scope = ["https://spreadsheets.google.com/feeds","https://www.googleapis.com/auth/drive"]
+creds = ServiceAccountCredentials.from_json_keyfile_name("credenciales.json", scope)
+client = gspread.authorize(creds)
 
-# --- Estilo personalizado ---
-st.markdown("""
-    <style>
-    .stApp {
-        background: linear-gradient(135deg, #e3f2fd, #fce4ec);
-        text-align: center;
-    }
-    h1 {
-        color: #1e88e5;
-    }
-    .result {
-        font-size: 1.3em;
-        color: #2e7d32;
-        margin-top: 1rem;
-    }
-    </style>
-""", unsafe_allow_html=True)
+# Abrir la hoja
+sheet = client.open("Inscripciones Futbol").sheet1
 
-# --- Contenido principal ---
-st.title("🔤 Contador de Letras")
+# --- Inicializar estado si no existe ---
+# Celda A1 = "Estado" | A2 = "Cerrada"
+try:
+    estado = sheet.acell("A2").value
+except:
+    sheet.update("A1", "Estado")
+    sheet.update("A2", "Cerrada")
+    estado = "Cerrada"
 
-palabra = st.text_input("✏️ Escribe una palabra:", "")
+# --- Leer datos existentes ---
+data = sheet.get_all_records()
+df = pd.DataFrame(data)
 
-if st.button("Contar letras"):
-    if palabra.strip() == "":
-        st.warning("⚠️ Por favor, escribe una palabra primero.")
+st.title("⚽ Inscripción pichanga ⚽")
+st.write(f"Cupo máximo: 14 jugadores")
+st.write(f"Jugadores inscritos: {len(df)}")
+st.write(f"Estado de la lista: {estado}")
+
+# -------------------------
+# Panel de control de admin
+# -------------------------
+admin_password = "#Mordecay123"  # Cambia esto a tu contraseña
+
+st.sidebar.title("Panel de administrador 🔒")
+password = st.sidebar.text_input("Ingresa contraseña", type="password")
+
+if password == admin_password:
+    st.sidebar.subheader("Control de lista")
+    
+    if st.sidebar.button("Resetear lista"):
+        sheet.clear()
+        sheet.append_row(["Nombre"])  # encabezado
+        sheet.update("A1", "Estado")
+        sheet.update("A2", "Cerrada")
+        st.success("✅ Lista reseteada correctamente")
+        df = pd.DataFrame(columns=["Nombre"])  # vacía localmente
+        estado = "Cerrada"
+        
+    if st.sidebar.button("Abrir lista"):
+        sheet.update("A2", "Abierta")
+        st.success("✅ Lista abierta para inscripciones")
+        estado = "Abierta"
+
+elif password != "" and password != admin_password:
+    st.sidebar.error("Contraseña incorrecta ❌")
+
+# -------------------------
+# Registro de jugadores
+# -------------------------
+nombre = st.text_input("Ingresa tu nombre")
+
+if st.button("Registrarme"):
+    if estado != "Abierta":
+        st.warning("❌ Las inscripciones aún no están abiertas ❌")
+    elif len(df) >= 14:
+        st.error("⚠️ Cupo completo, la lista ya está cerrada ⚠️")
+        sheet.update("A2", "Cerrada")
+        estado = "Cerrada"
+    elif nombre.strip() == "":
+        st.warning("Ingresa un nombre válido")
+    elif nombre in df['Nombre'].values:
+        st.warning("Ya estás inscrito broder")
     else:
-        st.info("Procesando tu palabra...")
-        progreso = st.progress(0)
+        sheet.append_row([nombre])
+        st.success(f"{nombre} inscrito correctamente ✅")
+        df = pd.concat([df, pd.DataFrame({"Nombre":[nombre]})], ignore_index=True)
+        # Cierre automático al llegar a 14 jugadores
+        if len(df) >= 14:
+            st.warning("⚠️ Se alcanzó el cupo máximo, la lista se cerrará automáticamente")
+            sheet.update("A2", "Cerrada")
+            estado = "Cerrada"
 
-        for i in range(100):
-            time.sleep(0.02)
-            progreso.progress(i + 1)
-
-        st.balloons()
-        st.markdown(
-            f"<div class='result'>La palabra <b>{palabra}</b> tiene <b>{len(palabra)}</b> letras. 🎉</div>",
-            unsafe_allow_html=True
-        )
+# Mostrar jugadores
+st.subheader("Jugadores inscritos")
+st.table(df)
