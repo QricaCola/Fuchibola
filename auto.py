@@ -19,7 +19,7 @@ sheet = client.open(sheet_name).sheet1
 
 # ---------- CONFIG STREAMLIT ----------
 st.title("Pichanga Miércoles ⚽")
-st.write("Máximo 14 jugadores por partido")
+st.write("Máximo 20 jugadores por partido")
 
 # Leer jugadores actuales desde Google Sheets
 try:
@@ -36,7 +36,7 @@ if password == "#Mordecay123":  # Cambia esto a algo seguro
     st.sidebar.markdown("---")
 
 # ---------- REGISTRO DE JUGADORES ----------
-if len(jugadores) < 14:
+if len(jugadores) < 20:
     nombre = st.text_input("Ingresa tu nombre y si deseas, añade la posición en la que te gusta jugar entre paréntesis")
     if st.button("Anotarme"):
         if nombre.strip() == "":
@@ -49,7 +49,7 @@ if len(jugadores) < 14:
             st.success(f"{nombre} anotado")
             jugadores.append(nombre)
 else:
-    st.error("Se alcanzó el máximo de 14 jugadores broder")
+    st.error("Se alcanzó el máximo de 20 jugadores broder")
 
 # ---------- MOSTRAR JUGADORES ----------
 if jugadores:
