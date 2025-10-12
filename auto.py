@@ -38,14 +38,15 @@ if password == "#Mordecay123":  # Cambia esto a algo seguro
     nombre_borrar = st.sidebar.text_input("Ingresar el nombre a borrar")
     
     if st.sidebar.button("Borrar jugador"):
-        jugadores = sheet.col_values(1)  # obtiene la lista actual de jugadores
-        if nombre_borrar in jugadores:
-            index = jugadores.index(nombre_borrar) + 1  # +1 porque las hojas comienzan en 1
+        jugadores = [j.strip().lower() for j in sheet.col_values(1)]  # limpia espacios y minúsculas
+        nombre_borrar_limpio = nombre_borrar.strip().lower()
+    
+        if nombre_borrar_limpio in jugadores:
+            index = jugadores.index(nombre_borrar_limpio) + 1  # +1 porque las hojas comienzan en 1
             sheet.delete_rows(index)
             st.sidebar.success(f"Jugador '{nombre_borrar}' eliminado correctamente 🗑️")
         else:
-            st.sidebar.warning(f"No se encontró el jugador '{nombre_borrar}' en la lista.")
-
+            st.sidebar.warning(f"No se encontró el jugador '{nombre_borrar}' en la lista. Revisa que esté bien escrito.")
 # ---------- REGISTRO DE JUGADORES ----------
 if len(jugadores) < 20:
     nombre = st.text_input("Ingresa tu nombre y si deseas, añade la posición en la que te gusta jugar entre paréntesis")
