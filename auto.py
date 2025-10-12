@@ -6,7 +6,10 @@ from oauth2client.service_account import ServiceAccountCredentials
 from datetime import datetime
 
 # ---------- CONFIG GOOGLE SHEETS ----------
-scope = ['https://spreadsheets.google.com/feeds', 'https://www.googleapis.com/auth/drive']
+scope = [
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive"
+]
 
 # Leer credenciales desde variable de entorno de Streamlit Cloud
 creds_dict = json.loads(os.environ['GSPREAD_JSON'])
