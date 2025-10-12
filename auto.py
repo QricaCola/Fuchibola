@@ -12,7 +12,7 @@ creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
 client = gspread.authorize(creds)
 
 sheet_name = "Inscripciones Futbol"
-sheet = client.open(sheet_name).worksheet("Jugadores")  # Hoja de jugadores
+sheet = client.open(sheet_name).worksheet("Hoja 1")  # Hoja de jugadores
 
 # ---------- CONFIG STREAMLIT ----------
 st.title("Pichanga Miércoles ⚽")
