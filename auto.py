@@ -53,7 +53,7 @@ st.sidebar.markdown("---")
 st.sidebar.subheader("⚽ Zona Capitanes")
 
 # Configura aquí los capitanes y la contraseña común
-capitanes = ["Capitán 1", "Capitán 2"]
+capitanes = ["prat", "keter"]
 contraseña_capitan = "clave123"
 
 nombre_cap = st.sidebar.text_input("Nombre del capitán")
