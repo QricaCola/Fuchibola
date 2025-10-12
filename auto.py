@@ -61,21 +61,21 @@ clave_cap = st.sidebar.text_input("Contraseña", type="password")
 
 # Crear hojas si no existen
 try:
-    sheet_jugadores = client.open("Fuchibola").worksheet("Jugadores")
+    sheet_jugadores = client.open("Inscripciones Futbol").worksheet("Jugadores")
 except:
-    sheet_jugadores = client.open("Fuchibola").add_worksheet(title="Jugadores", rows="50", cols="1")
+    sheet_jugadores = client.open("Inscripciones Futbol").add_worksheet(title="Jugadores", rows="50", cols="1")
 
 try:
-    sheet_confirm = client.open("Fuchibola").worksheet("Confirmaciones")
+    sheet_confirm = client.open("Inscripciones Futbol").worksheet("Confirmaciones")
 except:
-    sheet_confirm = client.open("Fuchibola").add_worksheet(title="Confirmaciones", rows="10", cols="2")
+    sheet_confirm = client.open("Inscripciones Futbol").add_worksheet(title="Confirmaciones", rows="10", cols="2")
     sheet_confirm.update("A1:B1", [["Capitán 1", "Capitán 2"]])
     sheet_confirm.update("A2:B2", [["❌", "❌"]])
 
 try:
-    sheet_equipos = client.open("Fuchibola").worksheet("Equipos")
+    sheet_equipos = client.open("Inscripciones Futbol").worksheet("Equipos")
 except:
-    sheet_equipos = client.open("Fuchibola").add_worksheet(title="Equipos", rows="20", cols="2")
+    sheet_equipos = client.open("Inscripciones Futbol").add_worksheet(title="Equipos", rows="20", cols="2")
 
 if st.sidebar.button("Ingresar como capitán"):
     if nombre_cap in capitanes and clave_cap == contraseña_capitan:
