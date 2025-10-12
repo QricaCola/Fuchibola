@@ -47,6 +47,50 @@ if password == "#Mordecay123":  # Cambia esto a algo seguro
             st.sidebar.success(f"Jugador '{nombre_borrar}' eliminado correctamente 🗑️")
         else:
             st.sidebar.warning(f"No se encontró el jugador '{nombre_borrar}' en la lista. Revisa que esté bien escrito.")
+
+# ---------- PANEL DE CAPITANES ----------
+st.sidebar.markdown("---")
+st.sidebar.subheader("⚽ Zona de Capitanes")
+
+# Diccionario con capitanes y sus contraseñas
+capitanes = {
+    "Capitán 1": "clave1",
+    "Capitán 2": "clave2"
+}
+
+nombre_capitan = st.sidebar.text_input("Nombre del capitán")
+clave_capitan = st.sidebar.text_input("Contraseña del capitán", type="password")
+
+if st.sidebar.button("Ingresar como capitán"):
+    if nombre_capitan in capitanes and clave_capitan == capitanes[nombre_capitan]:
+        st.session_state["capitan"] = nombre_capitan
+        st.sidebar.success(f"Bienvenido, {nombre_capitan} 👋 Esperando al otro capitán...")
+
+        # ---------- Confirmaciones en Google Sheets ----------
+        try:
+            hoja_confirmaciones = client.open("Fuchibola").worksheet("Confirmaciones")
+        except:
+            hoja_confirmaciones = client.open("Fuchibola").add_worksheet(title="Confirmaciones", rows="10", cols="2")
+            hoja_confirmaciones.update("A1:B1", [["Capitán 1", "Capitán 2"]])
+            hoja_confirmaciones.update("A2:B2", [["❌", "❌"]])
+
+        confirmaciones = hoja_confirmaciones.get_all_values()
+        if nombre_capitan == "Capitán 1":
+            hoja_confirmaciones.update_acell("A2", "✅")
+        elif nombre_capitan == "Capitán 2":
+            hoja_confirmaciones.update_acell("B2", "✅")
+
+        confirmaciones = hoja_confirmaciones.get_all_values()
+
+        # Si ambos confirmaron, mostrar mensaje
+        if len(confirmaciones) > 1 and confirmaciones[1][0] == "✅" and confirmaciones[1][1] == "✅":
+            st.sidebar.success("✅ Ambos capitanes han confirmado. ¡Comienza la elección de jugadores!")
+            st.session_state["eleccion_activa"] = True
+        else:
+            st.sidebar.info("Esperando al otro capitán...")
+
+    else:
+        st.sidebar.error("Nombre o contraseña incorrectos ❌")
 # ---------- REGISTRO DE JUGADORES ----------
 if len(jugadores) < 20:
     nombre = st.text_input("Ingresa tu nombre y si deseas, añade la posición en la que te gusta jugar entre paréntesis")
