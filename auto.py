@@ -34,6 +34,9 @@ if password == "#Mordecay123":  # Cambia esto a algo seguro
         sheet.clear()
         st.sidebar.success("Lista reseteada!")
     st.sidebar.markdown("---")
+    nombre_borrar = st.text_input("Ingresar el nombre a borrar")
+    if st.sidebar.button("Borrar jugador"):
+        jugadores.remove(nombre_borrar)
 
 # ---------- REGISTRO DE JUGADORES ----------
 if len(jugadores) < 20:
