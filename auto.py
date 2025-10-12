@@ -54,8 +54,8 @@ st.sidebar.subheader("⚽ Zona de Capitanes")
 
 # Diccionario con capitanes y sus contraseñas
 capitanes = {
-    "Capitán 1": "clave1",
-    "Capitán 2": "clave2"
+    "prat": "clave1",
+    "keter": "clave2"
 }
 
 nombre_capitan = st.sidebar.text_input("Nombre del capitán")
