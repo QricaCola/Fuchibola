@@ -48,49 +48,101 @@ if password == "#Mordecay123":  # Cambia esto a algo seguro
         else:
             st.sidebar.warning(f"No se encontró el jugador '{nombre_borrar}' en la lista. Revisa que esté bien escrito.")
 
-# ---------- PANEL DE CAPITANES ----------
+# ---------- PANEL CAPITANES ----------
 st.sidebar.markdown("---")
-st.sidebar.subheader("⚽ Zona de Capitanes")
+st.sidebar.subheader("⚽ Zona Capitanes")
 
-# Diccionario con capitanes y sus contraseñas
-capitanes = {
-    "prat": "clave1",
-    "keter": "clave2"
-}
+# Configura aquí los capitanes y la contraseña común
+capitanes = ["Capitán 1", "Capitán 2"]
+contraseña_capitan = "clave123"
 
-nombre_capitan = st.sidebar.text_input("Nombre del capitán")
-clave_capitan = st.sidebar.text_input("Contraseña del capitán", type="password")
+nombre_cap = st.sidebar.text_input("Nombre del capitán")
+clave_cap = st.sidebar.text_input("Contraseña", type="password")
+
+# Crear hojas si no existen
+try:
+    sheet_jugadores = client.open("Fuchibola").worksheet("Jugadores")
+except:
+    sheet_jugadores = client.open("Fuchibola").add_worksheet(title="Jugadores", rows="50", cols="1")
+
+try:
+    sheet_confirm = client.open("Fuchibola").worksheet("Confirmaciones")
+except:
+    sheet_confirm = client.open("Fuchibola").add_worksheet(title="Confirmaciones", rows="10", cols="2")
+    sheet_confirm.update("A1:B1", [["Capitán 1", "Capitán 2"]])
+    sheet_confirm.update("A2:B2", [["❌", "❌"]])
+
+try:
+    sheet_equipos = client.open("Fuchibola").worksheet("Equipos")
+except:
+    sheet_equipos = client.open("Fuchibola").add_worksheet(title="Equipos", rows="20", cols="2")
 
 if st.sidebar.button("Ingresar como capitán"):
-    if nombre_capitan in capitanes and clave_capitan == capitanes[nombre_capitan]:
-        st.session_state["capitan"] = nombre_capitan
-        st.sidebar.success(f"Bienvenido, {nombre_capitan} 👋 Esperando al otro capitán...")
+    if nombre_cap in capitanes and clave_cap == contraseña_capitan:
+        st.session_state["capitan"] = nombre_cap
+        st.sidebar.success(f"Bienvenido {nombre_cap}, esperando al otro capitán...")
 
-        # ---------- Confirmaciones en Google Sheets ----------
-        try:
-            hoja_confirmaciones = client.open("Fuchibola").worksheet("Confirmaciones")
-        except:
-            hoja_confirmaciones = client.open("Fuchibola").add_worksheet(title="Confirmaciones", rows="10", cols="2")
-            hoja_confirmaciones.update("A1:B1", [["Capitán 1", "Capitán 2"]])
-            hoja_confirmaciones.update("A2:B2", [["❌", "❌"]])
+        # ---------- Confirmaciones ----------
+        if nombre_cap == "Capitán 1":
+            sheet_confirm.update_acell("A2", "✅")
+        else:
+            sheet_confirm.update_acell("B2", "✅")
 
-        confirmaciones = hoja_confirmaciones.get_all_values()
-        if nombre_capitan == "Capitán 1":
-            hoja_confirmaciones.update_acell("A2", "✅")
-        elif nombre_capitan == "Capitán 2":
-            hoja_confirmaciones.update_acell("B2", "✅")
-
-        confirmaciones = hoja_confirmaciones.get_all_values()
-
-        # Si ambos confirmaron, mostrar mensaje
-        if len(confirmaciones) > 1 and confirmaciones[1][0] == "✅" and confirmaciones[1][1] == "✅":
-            st.sidebar.success("✅ Ambos capitanes han confirmado. ¡Comienza la elección de jugadores!")
+        confirm = sheet_confirm.get_all_values()
+        if confirm[1][0] == "✅" and confirm[1][1] == "✅":
+            st.sidebar.success("✅ Ambos capitanes confirmados, inicia la elección!")
             st.session_state["eleccion_activa"] = True
         else:
             st.sidebar.info("Esperando al otro capitán...")
-
     else:
         st.sidebar.error("Nombre o contraseña incorrectos ❌")
+
+# ---------- ELECCIÓN DE JUGADORES ----------
+if st.session_state.get("eleccion_activa", False):
+    st.subheader("🏆 Elección de jugadores")
+
+    # Obtener jugadores disponibles
+    jugadores = [j[0] for j in sheet_jugadores.get_all_values()]
+    if "seleccion_blanco" not in st.session_state:
+        st.session_state["seleccion_blanco"] = []
+    if "seleccion_azul" not in st.session_state:
+        st.session_state["seleccion_azul"] = []
+
+    st.write("Jugadores disponibles:", jugadores)
+    st.write("Equipo Blanco:", st.session_state["seleccion_blanco"])
+    st.write("Equipo Azul:", st.session_state["seleccion_azul"])
+
+    # Turnos: alternar capitanes
+    turno = st.session_state.get("turno", 0)
+    cap_turno = capitanes[turno % 2]
+    st.write(f"Turno: {cap_turno}")
+
+    nombre_elegido = st.text_input(f"{cap_turno}, escribe el nombre del jugador a elegir")
+
+    if st.button("Seleccionar jugador"):
+        if nombre_elegido in jugadores:
+            if cap_turno == "Capitán 1":
+                st.session_state["seleccion_blanco"].append(nombre_elegido)
+                sheet_equipos.update_cell(len(st.session_state["seleccion_blanco"])+1, 1, nombre_elegido)
+            else:
+                st.session_state["seleccion_azul"].append(nombre_elegido)
+                sheet_equipos.update_cell(len(st.session_state["seleccion_azul"])+1, 2, nombre_elegido)
+
+            jugadores.remove(nombre_elegido)
+            st.session_state["turno"] = turno + 1
+
+            # Actualizar hoja de jugadores
+            valores = [[j] for j in jugadores]
+            sheet_jugadores.clear()
+            if valores:
+                sheet_jugadores.update("A1", valores)
+        else:
+            st.warning("Ese jugador no está disponible")
+
+    # ---------- FINALIZAR ELECCIÓN ----------
+    if not jugadores:
+        st.success("🎉 Elecciones finalizadas, buena suerte!")
+        st.session_state["eleccion_activa"] = False
 # ---------- REGISTRO DE JUGADORES ----------
 if len(jugadores) < 20:
     nombre = st.text_input("Ingresa tu nombre y si deseas, añade la posición en la que te gusta jugar entre paréntesis")
