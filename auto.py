@@ -15,7 +15,6 @@ client = gspread.authorize(creds)
 sheet_name = "Inscripciones Futbol"
 spreadsheet = client.open(sheet_name)
 
-# Función para abrir o crear hoja
 def open_or_create(title, rows="50", cols="2"):
     try:
         return spreadsheet.worksheet(title)
@@ -31,50 +30,51 @@ st.title("Pichanga Miércoles ⚽")
 st.write("Máximo 20 jugadores por partido")
 
 # ---------- PANEL ADMIN ----------
-password = st.sidebar.text_input("Admin", type="password")
 admin_activo = False
-if password == "#Mordecay123":
-    admin_activo = True
-    st.sidebar.success("Modo Admin activo ✅")
+with st.sidebar:
+    st.subheader("🔑 Admin")
+    password = st.text_input("Contraseña Admin", type="password")
+    if password == "#Mordecay123":
+        admin_activo = True
+        st.success("Modo Admin activo ✅")
 
-    # Resetear lista completa
-    if st.sidebar.button("Resetear lista"):
-        sheet_jugadores.clear()
-        sheet_confirm.clear()
-        sheet_confirm.update("A1:B1", [["Azul", "Blanco"]])
-        sheet_confirm.update("A2:B2", [["❌","❌"]])
-        sheet_equipos.clear()
-        st.sidebar.success("Todas las hojas reseteadas!")
+        # Resetear listas
+        if st.button("Resetear lista"):
+            sheet_jugadores.clear()
+            sheet_confirm.clear()
+            sheet_confirm.update("A1:B1", [["Azul", "Blanco"]])
+            sheet_confirm.update("A2:B2", [["❌","❌"]])
+            sheet_equipos.clear()
+            st.success("Todas las hojas reseteadas!")
 
-    st.sidebar.markdown("---")
-    # Borrar jugador específico
-    nombre_borrar = st.sidebar.text_input("Ingresar el nombre a borrar")
-    if st.sidebar.button("Borrar jugador"):
-        jugadores = [j.strip() for j in sheet_jugadores.col_values(1)]
-        nombre_borrar_limpio = nombre_borrar.strip()
-        if nombre_borrar_limpio in jugadores:
-            index = jugadores.index(nombre_borrar_limpio) + 1
-            sheet_jugadores.delete_rows(index)
-            st.sidebar.success(f"Jugador '{nombre_borrar}' eliminado 🗑️")
-        else:
-            st.sidebar.warning(f"No se encontró '{nombre_borrar}'.")
+        st.markdown("---")
+        # Borrar jugador
+        nombre_borrar = st.text_input("Borrar jugador")
+        if st.button("Eliminar jugador"):
+            jugadores = [j.strip() for j in sheet_jugadores.col_values(1)]
+            nombre_borrar_limpio = nombre_borrar.strip()
+            if nombre_borrar_limpio in jugadores:
+                index = jugadores.index(nombre_borrar_limpio) + 1
+                sheet_jugadores.delete_rows(index)
+                st.success(f"Jugador '{nombre_borrar}' eliminado 🗑️")
+            else:
+                st.warning(f"No se encontró '{nombre_borrar}'.")
 
-    st.sidebar.markdown("---")
-    st.sidebar.subheader("Designar Capitanes")
-    cap_azul = st.sidebar.text_input("Nombre Capitán Azul")
-    cap_blanco = st.sidebar.text_input("Nombre Capitán Blanco")
-    if st.sidebar.button("Guardar Capitanes"):
-        sheet_confirm.update("A1:B1", [[cap_azul, cap_blanco]])
-        sheet_confirm.update("A2:B2", [["❌","❌"]])
-        st.sidebar.success("Capitanes asignados ✅")
+        st.markdown("---")
+        # Asignar capitanes
+        st.subheader("Designar Capitanes")
+        cap_azul = st.text_input("Capitán Azul")
+        cap_blanco = st.text_input("Capitán Blanco")
+        color_inicio = st.selectbox("Equipo que inicia la elección", ["Azul", "Blanco"])
+        if st.button("Guardar Capitanes"):
+            sheet_confirm.update("A1:B1", [[cap_azul, cap_blanco]])
+            sheet_confirm.update("A2:B2", [["❌","❌"]])
+            st.success("Capitanes asignados ✅")
 
-# ---------- ELECCIÓN DE CAPITANES ----------
-colores = ["Azul", "Blanco"]
-color_inicio = st.selectbox("¿Qué equipo inicia la elección?", colores)
-
+# ---------- LEER CONFIRMACIONES ----------
 confirm_values = sheet_confirm.get_all_values()
 if len(confirm_values) < 2:
-    # Inicializar confirmaciones si vacío
+    # Inicializar si está vacío
     sheet_confirm.update("A1:B1", [["Azul", "Blanco"]])
     sheet_confirm.update("A2:B2", [["❌","❌"]])
     confirm_values = sheet_confirm.get_all_values()
@@ -82,19 +82,23 @@ if len(confirm_values) < 2:
 cap_azul = confirm_values[0][0] if len(confirm_values) > 0 else ""
 cap_blanco = confirm_values[0][1] if len(confirm_values) > 0 else ""
 
-# ---------- LOGIN CAPITAN ----------
-nombre_cap = st.text_input("Ingresa tu nombre de capitán")
-clave_cap = st.text_input("Contraseña única de capitán", type="password")
-if st.button("Ingresar como capitán"):
-    if clave_cap == "#Mordecay123" and nombre_cap in [cap_azul, cap_blanco]:
-        st.success(f"Bienvenido {nombre_cap}")
-        st.session_state["capitan"] = nombre_cap
+# ---------- LOGIN CAPITÁN (sidebar) ----------
+with st.sidebar:
+    st.subheader("⚽ Ingresar como Capitán")
+    nombre_cap = st.text_input("Nombre Capitán", key="nombre_cap")
+    clave_cap = st.text_input("Contraseña única de capitán", type="password", key="clave_cap")
+    if st.button("Ingresar como capitán"):
+        if clave_cap == "#Mordecay123" and nombre_cap in [cap_azul, cap_blanco]:
+            st.success(f"Bienvenido {nombre_cap}")
+            st.session_state["capitan"] = nombre_cap
 
-        # Actualizar confirmación
-        if nombre_cap == cap_azul:
-            sheet_confirm.update_acell("A2", "✅")
+            # Actualizar confirmación
+            if nombre_cap == cap_azul:
+                sheet_confirm.update_acell("A2", "✅")
+            else:
+                sheet_confirm.update_acell("B2", "✅")
         else:
-            sheet_confirm.update_acell("B2", "✅")
+            st.error("Nombre o contraseña incorrectos ❌")
 
 # ---------- ELECCIÓN DE JUGADORES ----------
 if "capitan" in st.session_state:
@@ -109,9 +113,13 @@ if "capitan" in st.session_state:
     st.write("Equipo Azul:", st.session_state["seleccion_azul"])
     st.write("Equipo Blanco:", st.session_state["seleccion_blanco"])
 
-    # Turno dinámico según color_inicio
+    # Turno según color que inicia solo si admin lo determinó
     turno = st.session_state.get("turno", 0)
-    cap_turno = cap_azul if (color_inicio == "Azul" and turno % 2 == 0) or (color_inicio == "Blanco" and turno % 2 == 1) else cap_blanco
+    if admin_activo:
+        cap_turno = cap_azul if (color_inicio == "Azul" and turno % 2 == 0) or (color_inicio == "Blanco" and turno % 2 == 1) else cap_blanco
+    else:
+        cap_turno = cap_azul if turno % 2 == 0 else cap_blanco
+
     st.write(f"Turno de: {cap_turno}")
 
     nombre_elegido = st.text_input(f"{cap_turno}, escribe el nombre del jugador a elegir", key="input_eleccion")
@@ -135,12 +143,13 @@ if "capitan" in st.session_state:
             st.warning("Ese jugador no está disponible o fue escrito incorrectamente.")
 
 # ---------- REGISTRO GENERAL ----------
-if len(sheet_jugadores.get_all_values() or []) < 20:
+jugadores_existentes = [j[0] for j in sheet_jugadores.get_all_values()] if sheet_jugadores.get_all_values() else []
+if len(jugadores_existentes) < 20:
     nombre = st.text_input("Ingresa tu nombre para anotarte")
     if st.button("Anotarme"):
         if nombre.strip() == "":
             st.warning("Ingresa un nombre válido")
-        elif nombre in [j[0] for j in sheet_jugadores.get_all_values()]:
+        elif nombre in jugadores_existentes:
             st.warning("Ya estás inscrito!")
         else:
             sheet_jugadores.append_row([nombre, str(datetime.now())])
@@ -149,8 +158,8 @@ else:
     st.error("Se alcanzó el máximo de 20 jugadores")
 
 # ---------- MOSTRAR JUGADORES ----------
-jugadores = [j[0] for j in sheet_jugadores.get_all_values()] if sheet_jugadores.get_all_values() else []
-if jugadores:
+jugadores_existentes = [j[0] for j in sheet_jugadores.get_all_values()] if sheet_jugadores.get_all_values() else []
+if jugadores_existentes:
     st.subheader("Jugadores inscritos:")
-    for i,j in enumerate(jugadores,1):
+    for i,j in enumerate(jugadores_existentes,1):
         st.write(f"{i}. {j}")
