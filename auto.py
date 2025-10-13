@@ -34,7 +34,7 @@ password = st.sidebar.text_input("Admin", type="password")
 admin_activo = False
 if password == "#Mordecay123":
     admin_activo = True
-    st.sidebar.success("Modo Admin activo ✅")
+    st.sidebar.success("Modo Admin ✅")
 
     # Resetear lista completa
     if st.sidebar.button("Resetear lista"):
@@ -61,8 +61,8 @@ if password == "#Mordecay123":
 
     st.sidebar.markdown("---")
     st.sidebar.subheader("Designar Capitanes")
-    cap_azul = st.sidebar.text_input("Nombre Capitán Azul")
-    cap_blanco = st.sidebar.text_input("Nombre Capitán Blanco")
+    cap_azul = st.sidebar.text_input("Capitán Azul")
+    cap_blanco = st.sidebar.text_input("Capitán Blanco")
     if st.sidebar.button("Guardar Capitanes"):
         sheet_confirm.update("A1:B1", [[cap_azul, cap_blanco]])
         sheet_confirm.update("A2:B2", [["❌","❌"]])
@@ -84,10 +84,10 @@ cap_blanco = confirm_values[0][1]
 
 # ---------- LOGIN CAPITAN ----------
 st.sidebar.subheader("Zona Capitanes")
-nombre_cap = st.sidebar.text_input("Ingresa tu nombre de capitán", key="cap_name")
-clave_cap = st.sidebar.text_input("Contraseña única de capitán", type="password", key="cap_pass")
+nombre_cap = st.sidebar.text_input("Ingresa tu nombre capitán", key="cap_name")
+clave_cap = st.sidebar.text_input("Contraseña", type="password", key="cap_pass")
 if st.sidebar.button("Ingresar como capitán"):
-    if clave_cap == "#Mordecay123" and nombre_cap in [cap_azul, cap_blanco]:
+    if clave_cap == "clave123" and nombre_cap in [cap_azul, cap_blanco]:
         st.session_state["capitan"] = nombre_cap
         st.success(f"Bienvenido {nombre_cap}")
         # Actualizar confirmación
