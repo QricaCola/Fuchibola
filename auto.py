@@ -53,7 +53,7 @@ def write_players(players):
 
 # ---------------- UI ----------------
 st.set_page_config(page_title="Pichanga ⚽", layout="wide")
-st.title("Inscripción Pichanga ⚽")
+st.title("Inscripción Pichanga ⚽ (22/10/2025)")
 st.write(f"Máximo de jugadores: {MAX_PLAYERS}")
 
 # ---- PANEL ADMIN ----
@@ -85,7 +85,7 @@ with st.sidebar:
             else:
                 st.warning("Nombre no encontrado en la lista.")
     else:
-        st.info("Ingresa la contraseña de admin para administrar jugadores.")
+        st.info("Contraseña.")
 
 # ---- REGISTRO ----
 st.subheader("📝 Registro de jugadores")
